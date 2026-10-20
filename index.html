@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Circular Queue Visualizer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+
+    <!-- ============ Page header ============ -->
+    <header>
+      <div class="hero">
+        <h1>
+          <span class="logo">🔄</span>
+          <span>Circular Queue — Visualizer</span>
+        </h1>
+        <p>
+          See how FRONT, REAR, and circular links work. Insert and remove items,
+          inspect the pointers, and practise explaining every operation.
+        </p>
+      </div>
+      <nav>
+        <button class="tab on" data-tab="lab">Lab</button>
+        <button class="tab" data-tab="walk">Walkthrough</button>
+      </nav>
+    </header>
+
+    <!-- ============ TAB 1: the interactive lab ============ -->
+    <section id="lab">
+      <div class="grid">
+
+        <!-- Left card: the ring -->
+        <div class="card">
+          <svg viewBox="0 0 400 400" aria-label="Circular queue ring">
+            <g id="slots"></g>
+            <text class="mid" x="200" y="196">count</text>
+            <text class="mid" id="count-label" x="200" y="216">0</text>
+
+            <!-- F = front pointer, R = rear pointer (moved by script.js) -->
+            <g class="ptr" id="ptr-front"><circle r="12"/><text>F</text></g>
+            <g class="ptr" id="ptr-rear"><circle r="12"/><text>R</text></g>
+          </svg>
+
+          <p class="legend">
+            <b class="c-front">F</b> = front (next item out, outside the ring) &nbsp;
+            <b class="c-rear">R</b> = rear (last item in, inside the ring).
+          </p>
+
+          <div class="stats" id="stats"></div>
+          <div class="hint">The real array underneath:</div>
+          <div class="arr" id="array-row"></div>
+        </div>
+
+        <!-- Right card: controls + step-by-step explanation -->
+        <div class="card">
+          <div class="ctl">
+            <input id="value-input" maxlength="8" placeholder="Enter a value" aria-label="Value to enqueue">
+            <button class="btn" id="btn-enqueue">Enqueue</button>
+            <button class="btn" id="btn-dequeue">Dequeue</button>
+            <button class="btn alt" id="btn-peek">Peek</button>
+          </div>
+
+          <div class="ctl">
+            <label class="mut">Size
+              <select id="capacity-select">
+                <option>4</option>
+                <option>5</option>
+                <option>6</option>
+                <option selected>8</option>
+                <option>10</option>
+              </select>
+            </label>
+            <label class="mut">Speed
+              <select id="speed-select">
+                <option value="1700">Slow</option>
+                <option value="1000" selected>Medium</option>
+                <option value="400">Fast</option>
+              </select>
+            </label>
+            <button class="btn alt" id="btn-reset">Reset</button>
+          </div>
+
+          <h3 id="op-title">Ready</h3>
+          <ol id="steps"></ol>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============ TAB 2: the walkthrough ============ -->
+    <section id="walk" hidden>
+      <div class="card">
+
+        <h2 class="first">1. The problem a circular queue solves</h2>
+        <p>
+          A queue is first in, first out: people join at the back and leave from the front.
+          With a plain array, every time you dequeue, the front slot becomes empty and useless.
+          You either shift every item left (slow, O(n)) or keep moving the front forward and
+          slowly run out of room even though the start of the array is empty.
+        </p>
+
+        <h2>2. The idea</h2>
+        <p>
+          Pretend the last slot of the array is connected to the first, forming a ring.
+          When a pointer walks off the end, it simply continues at slot 0. Freed slots get
+          reused, and nothing ever has to be shifted.
+        </p>
+
+        <h2>3. Three variables run everything</h2>
+        <ul>
+          <li><code>front</code>: index of the oldest item, the one that leaves next.</li>
+          <li><code>rear</code>: index of the newest item, the last one that joined.</li>
+          <li><code>count</code>: how many items are stored right now.</li>
+        </ul>
+        <p>
+          We start with <code>front = 0</code>, <code>rear = N - 1</code>, <code>count = 0</code>.
+          Rear begins one step behind front so that the first enqueue (rear + 1) lands exactly on slot 0.
+        </p>
+
+        <h2>4. The one trick: modulo</h2>
+        <p>
+          To move a pointer one step around the ring, use <code>(index + 1) % N</code>.
+          For N = 5: 2 becomes 3, 3 becomes 4, and 4 becomes (4 + 1) % 5 = <b>0</b>.
+          That wrap from the end back to the start is the whole “circular” part.
+        </p>
+
+        <h2>5. The two operations</h2>
+        <div class="grid">
+          <div>
+            <h3>Enqueue (add)</h3>
+            <ol>
+              <li>If <code>count == N</code>, the queue is full: overflow, stop.</li>
+              <li>Move rear: <code>rear = (rear + 1) % N</code>.</li>
+              <li>Store the value at <code>data[rear]</code>.</li>
+              <li><code>count++</code>.</li>
+            </ol>
+          </div>
+          <div>
+            <h3>Dequeue (remove)</h3>
+            <ol>
+              <li>If <code>count == 0</code>, the queue is empty: underflow, stop.</li>
+              <li>Read the value at <code>data[front]</code>.</li>
+              <li>Move front: <code>front = (front + 1) % N</code>.</li>
+              <li><code>count--</code>, then return the value.</li>
+            </ol>
+          </div>
+        </div>
+
+        <h2>6. Full or empty? Why we keep count</h2>
+        <p>
+          When the ring is completely full and when it is completely empty, front and rear end up
+          in the same relative position, so the pointers alone can’t tell the two apart. Keeping
+          <code>count</code> removes the doubt: empty is <code>count == 0</code>, full is
+          <code>count == N</code>. (The other common fix is to always leave one slot unused,
+          which wastes space.)
+        </p>
+
+        <h2>7. A worked trace (N = 4)</h2>
+        <div class="tw">
+          <table>
+            <tr><th>Operation</th><th>front</th><th>rear</th><th>count</th><th>Array</th></tr>
+            <tr><td>start</td><td>0</td><td>3</td><td>0</td><td>[ _ _ _ _ ]</td></tr>
+            <tr><td>enqueue A</td><td>0</td><td>0</td><td>1</td><td>[ A _ _ _ ]</td></tr>
+            <tr><td>enqueue B</td><td>0</td><td>1</td><td>2</td><td>[ A B _ _ ]</td></tr>
+            <tr><td>enqueue C</td><td>0</td><td>2</td><td>3</td><td>[ A B C _ ]</td></tr>
+            <tr><td>enqueue D</td><td>0</td><td>3</td><td>4</td><td>[ A B C D ] full</td></tr>
+            <tr><td>dequeue (A)</td><td>1</td><td>3</td><td>3</td><td>[ _ B C D ]</td></tr>
+            <tr><td>dequeue (B)</td><td>2</td><td>3</td><td>2</td><td>[ _ _ C D ]</td></tr>
+            <tr><td>enqueue E</td><td>2</td><td><b>0</b></td><td>3</td><td>[ E _ C D ] wrapped</td></tr>
+          </table>
+        </div>
+        <p class="mut">
+          Set the lab to size 4 and repeat these exact steps to watch it happen. The last row is
+          the payoff: E goes into slot 0, reusing space that a plain array would have wasted.
+        </p>
+
+        <h2>8. The code</h2>
+        <h3>Python</h3>
+<pre><code>class CircularQueue:
+    def __init__(self, n):
+        self.n = n
+        self.data = [None] * n
+        self.front = 0
+        self.rear = n - 1
+        self.count = 0
+
+    def enqueue(self, x):
+        if self.count == self.n:
+            raise OverflowError("queue is full")
+        self.rear = (self.rear + 1) % self.n
+        self.data[self.rear] = x
+        self.count += 1
+
+    def dequeue(self):
+        if self.count == 0:
+            raise IndexError("queue is empty")
+        x = self.data[self.front]
+        self.data[self.front] = None
+        self.front = (self.front + 1) % self.n
+        self.count -= 1
+        return x
+
+    def peek(self):
+        if self.count == 0:
+            raise IndexError("queue is empty")
+        return self.data[self.front]</code></pre>
+
+        <h3>C</h3>
+<pre><code>#define N 5
+int data[N], front = 0, rear = N - 1, count = 0;
+
+int enqueue(int x) {
+    if (count == N) return 0;      /* overflow */
+    rear = (rear + 1) % N;
+    data[rear] = x;
+    count++;
+    return 1;
+}
+
+int dequeue(int *out) {
+    if (count == 0) return 0;      /* underflow */
+    *out = data[front];
+    front = (front + 1) % N;
+    count--;
+    return 1;
+}</code></pre>
+
+        <h2>9. Cost and uses</h2>
+        <p>
+          Every operation is O(1): a couple of comparisons and one modulo, no shifting. Memory is
+          fixed at O(N). Circular queues appear in round-robin CPU scheduling, keyboard and network
+          buffers, audio streaming and print spoolers, anywhere a fixed-size buffer is read and
+          written continuously.
+        </p>
+
+        <h2>10. Explanation with scenario:</h2>
+        <div class="callout">
+          “Imagine a round table with N seats and a waiter. People sit down at the rear and get
+          served from the front. When someone is served, their seat frees up. Instead of everyone
+          shuffling along, the table is a circle, so when the rear reaches the last seat, the next
+          person just takes seat 0. Mathematically that’s <code>(index + 1) % N</code>. I also keep
+          a counter so I always know if the table is empty or full.”
+        </div>
+
+        <h3>Questions people ask:</h3>
+        <ul>
+          <li><b>Why modulo?</b> It turns “one past the end” back into 0 with a single expression.</li>
+          <li><b>Why start rear at N − 1?</b> So the first enqueue’s <code>(rear + 1) % N</code> gives slot 0.</li>
+          <li><b>Why not just compare front and rear?</b> They look identical when full and when empty; count disambiguates.</li>
+          <li><b>Does dequeue erase the value?</b> Not necessarily. Real code often leaves the old value and just ignores it, since count and front say it no longer counts. The lab clears it so you can see it go.</li>
+        </ul>
+
+        <p><button class="btn" id="btn-go-lab">Try it in the lab</button></p>
+      </div>
+    </section>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

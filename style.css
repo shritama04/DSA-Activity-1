@@ -1,0 +1,253 @@
+/* =========================================================
+   Circular Queue Visualizer — styles (dark theme)
+   ========================================================= */
+
+/* ---------- Colour tokens ---------- */
+:root {
+  --bg:    #0e1118;   /* page background        */
+  --card:  #171b26;   /* card background        */
+  --ink:   #e8ebf3;   /* main text              */
+  --mut:   #9aa3b8;   /* muted text             */
+  --line:  #2a3142;   /* borders                */
+  --acc:   #818cf8;   /* accent (buttons, tabs) */
+  --front: #34d399;   /* FRONT pointer          */
+  --rear:  #fbbf24;   /* REAR pointer           */
+  --fill:  #3b4482;   /* slot that holds a value*/
+  --hi:    #6b5a14;   /* slot being highlighted */
+  --bad:   #7f1d1d;   /* overflow / underflow   */
+  --slot:  #1d2230;   /* empty slot             */
+  --code:  #11141d;   /* code blocks            */
+  --btn-text: #0e1118;
+  color-scheme: dark;
+}
+
+/* ---------- Base ---------- */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+button, select, input { font: inherit; color: var(--ink); }
+
+.wrap { max-width: 1020px; margin: 0 auto; padding: 16px; }
+.mut  { color: var(--mut); }
+
+/* ---------- Header ---------- */
+header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin: 8px 0 18px;
+  text-align: center;
+}
+
+h1 {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1.5rem, 4.6vw, 2.4rem);
+  line-height: 1.2;
+}
+
+.logo {
+  display: inline-grid;
+  place-items: center;
+  width: 1.5em;
+  height: 1.5em;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #60a5fa, #2563eb);
+  font-size: 0.75em;
+}
+
+.hero p { margin: 10px auto 0; max-width: 640px; color: var(--mut); }
+
+/* ---------- Tabs ---------- */
+nav { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.tab {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 7px 13px;
+  cursor: pointer;
+}
+.tab.on { background: var(--acc); color: var(--btn-text); border-color: var(--acc); }
+
+/* ---------- Cards and layout ---------- */
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+}
+@media (max-width: 780px) {
+  .grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---------- The ring (SVG) ---------- */
+svg { display: block; width: 100%; max-width: 420px; margin: 0 auto; }
+
+.slot path {
+  fill: var(--slot);
+  stroke: var(--line);
+  transition: fill 0.35s;
+}
+.slot.on  path { fill: var(--fill); }
+.slot.hi  path { fill: var(--hi); }
+.slot.bad path { fill: var(--bad); }
+
+.val {
+  fill: var(--ink);
+  font-size: 20px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+.idx {
+  fill: var(--mut);
+  font-size: 10px;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.mid { fill: var(--mut); font-size: 13px; text-anchor: middle; }
+#count-label { font-size: 20px; font-weight: 700; }
+
+/* Front / rear markers slide smoothly to their new slot */
+.ptr { transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+.ptr text {
+  fill: var(--btn-text);
+  font-size: 13px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+#ptr-front circle { fill: var(--front); }
+#ptr-rear  circle { fill: var(--rear); }
+
+.legend { margin: 6px 0 0; font-size: 0.88rem; color: var(--mut); }
+.c-front { color: var(--front); }
+.c-rear  { color: var(--rear); }
+
+/* ---------- Stats and array row ---------- */
+.stats { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+
+.pill {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 11px;
+  font-size: 0.88rem;
+}
+.pill b { font-variant-numeric: tabular-nums; }
+
+.tag {
+  background: var(--bad);
+  color: var(--ink);
+  border-radius: 6px;
+  padding: 0 7px;
+  font-size: 0.8rem;
+}
+
+.hint { margin-bottom: 4px; font-size: 0.85rem; color: var(--mut); }
+
+.arr { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 4px; }
+
+.cell {
+  min-width: 46px;
+  text-align: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--slot);
+  font-size: 0.9rem;
+}
+.cell.on { background: var(--fill); }
+.cell small { display: block; color: var(--mut); font-size: 0.7rem; }
+.cell i {
+  display: block;
+  height: 1.1em;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 700;
+}
+
+/* ---------- Controls ---------- */
+.ctl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+
+.ctl input,
+.ctl select {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 7px 10px;
+}
+#value-input { width: 140px; }
+
+.btn {
+  background: var(--acc);
+  color: var(--btn-text);
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn.alt { background: var(--card); color: var(--ink); border: 1px solid var(--line); }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ---------- Step-by-step explanation ---------- */
+h3 { margin: 0 0 6px; font-size: 1rem; }
+
+#steps { margin: 8px 0 0; padding-left: 22px; }
+#steps li { margin: 7px 0; animation: fade-in 0.4s; }
+#steps li.placeholder { list-style: none; margin-left: -22px; color: var(--mut); }
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ---------- Walkthrough page ---------- */
+h2 { margin: 22px 0 6px; font-size: 1.1rem; }
+h2.first { margin-top: 0; }
+
+pre {
+  background: var(--code);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+  overflow-x: auto;
+  font: 13px/1.5 ui-monospace, Menlo, Consolas, monospace;
+}
+code {
+  background: var(--code);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font: 0.9em ui-monospace, Menlo, Consolas, monospace;
+}
+pre code { padding: 0; background: none; }
+
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { border: 1px solid var(--line); padding: 5px 8px; text-align: left; }
+.tw { overflow-x: auto; }
+
+.callout {
+  margin: 10px 0;
+  padding: 10px 14px;
+  background: var(--code);
+  border-left: 4px solid var(--acc);
+  border-radius: 0 10px 10px 0;
+}
